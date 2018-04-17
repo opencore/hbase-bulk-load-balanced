@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xmlns="http://maven.apache.org/POM/4.0.0"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <groupId>com.opencore</groupId>
+    <artifactId>hbase-bulk-load-balanced</artifactId>
+    <version>0.1-SNAPSHOT</version>
+
+    <properties>
+        <maven.compiler.target>1.8</maven.compiler.target>
+        <maven.compiler.source>1.8</maven.compiler.source>
+
+        <!-- Build versions -->
+        <hadoop.version>2.9.0</hadoop.version>
+        <guava.version>11.0.2</guava.version>
+
+        <!-- Tests -->
+        <slf4j.version>1.7.25</slf4j.version>
+        <hadoop-mini-clusters.version>0.1.14</hadoop-mini-clusters.version>
+        <junit.version>4.12</junit.version>
+        <commons-lang.version>2.6</commons-lang.version>
+    </properties>
+
+    <dependencies>
+        <dependency>
+            <groupId>org.apache.hadoop</groupId>
+            <artifactId>hadoop-common</artifactId>
+            <version>${hadoop.version}</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>com.google.guava</groupId>
+            <artifactId>guava</artifactId>
+            <version>${guava.version}</version>
+        </dependency>
+
+        <!-- Tests -->
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-api</artifactId>
+            <version>${slf4j.version}</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>com.github.sakserv</groupId>
+            <artifactId>hadoop-mini-clusters-mapreduce</artifactId>
+            <version>${hadoop-mini-clusters.version}</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>com.github.sakserv</groupId>
+            <artifactId>hadoop-mini-clusters-yarn</artifactId>
+            <version>${hadoop-mini-clusters.version}</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>com.github.sakserv</groupId>
+            <artifactId>hadoop-mini-clusters-hbase</artifactId>
+            <version>${hadoop-mini-clusters.version}</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>junit</groupId>
+            <artifactId>junit</artifactId>
+            <version>${junit.version}</version>
+            <scope>test</scope>
+        </dependency>
+    </dependencies>
+</project>
