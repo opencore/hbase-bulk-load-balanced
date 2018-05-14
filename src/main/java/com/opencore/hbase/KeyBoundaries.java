@@ -1,12 +1,15 @@
 package com.opencore.hbase;
 
 import com.google.common.base.Preconditions;
+import com.google.common.base.Throwables;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.BytesWritable;
 import org.apache.hadoop.io.SequenceFile;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.util.*;
@@ -37,6 +40,7 @@ import java.util.*;
  * below the configured maximum file size in HBase.
  */
 public class KeyBoundaries {
+  private static final Logger LOG = LoggerFactory.getLogger(KeyBoundaries.class);
   private final FileSystem fs;
   private final Configuration conf;
 
@@ -80,9 +84,13 @@ public class KeyBoundaries {
         partitionSizeBytes > 0, "Unable to split input into so many partitions");
     FileStatus[] statuses = fs.listStatus(input);
 
+    // Sort the files by the first key contained. There are no guarantees that the files are in any
+    // meaningful sorted order
     List<FileStatus> files = Arrays.asList(statuses);
-    Collections.sort(files);
+    LOG.info("Sorting {} input files by key contained", files.size());
+    Collections.sort(files, new FirstByteKeyComparator());
     Iterator<FileStatus> fileIter = files.iterator();
+    LOG.info("Finished sorting input files");
 
     List<byte[]> boundaries = new ArrayList<>(100);
 
@@ -121,5 +129,39 @@ public class KeyBoundaries {
     }
 
     return boundaries;
+  }
+
+  /**
+   * A comparator of the first key for in the sequence file.
+   * Employs caching to avoid multiple sequence file reads which are expensive.
+   */
+  private class FirstByteKeyComparator implements Comparator<FileStatus> {
+    private final BytesWritable.Comparator comp = new BytesWritable.Comparator();
+    private final Map<Path, BytesWritable> cache = new HashMap<>();
+
+    @Override
+    public int compare(FileStatus left, FileStatus right) {
+      return comp.compare(getFirstKey(left.getPath()), getFirstKey(right.getPath()));
+    }
+
+    private synchronized BytesWritable getFirstKey(Path p) {
+      if (cache.containsKey(p)) {
+        return cache.get(p);
+      } else {
+        try (SequenceFile.Reader reader =
+            new SequenceFile.Reader(conf, SequenceFile.Reader.file(p))) {
+          Preconditions.checkArgument(
+              reader.getKeyClass() == BytesWritable.class,
+              "Only keys of type BytesWritable are supported");
+          BytesWritable key = new BytesWritable();
+          reader.next(key);
+          cache.put(p, key);
+          return key;
+
+        } catch (IOException e) {
+          throw Throwables.propagate(e);
+        }
+      }
+    }
   }
 }
